@@ -4,7 +4,6 @@ import pandas as pd
 import requests
 
 # get s&p500 stock list 
-
 payload=pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
 sp500_list = payload[0]
 sp500_code = sp500_list['Symbol']
