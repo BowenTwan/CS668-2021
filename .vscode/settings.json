@@ -1,3 +1,4 @@
 {
-    "python.pythonPath": "/Users/bowenduan/anaconda3/envs/test-vnpy/bin/python"
+    "python.pythonPath": "/Users/bowenduan/anaconda3/envs/260_Python/bin/python",
+    "jupyter.jupyterServerType": "local"
 }
