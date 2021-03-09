@@ -1,7 +1,7 @@
 import yfinance as yf
 from yfinance import ticker
 import pandas as pd
-import requests
+# import requests
 
 # get s&p500 stock list 
 payload=pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
