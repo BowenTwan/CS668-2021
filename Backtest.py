@@ -14,6 +14,16 @@ import pandas as pd
 # better plotting and results analys
 from backtrader_plotting import Bokeh
 
+#* Getting stock list 
+# getting currecnt working dirctory
+cwd = os.getcwd()
+path = cwd + '/TPData'
+
+stocklist = []
+for filename in os.listdir(path):
+    if filename.endswith('.csv'):
+        stocklist.append(filename[3:-4])
+print(f'There are {len(stocklist)} stocks in S&P500 \n')
 
 # predition on new data and assign position singal
 # paper trading period: 20200208 ~ 20210208
