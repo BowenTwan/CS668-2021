@@ -126,10 +126,8 @@ class DPStrategy(bt.Strategy):
         # Check if we are in the market
         if not self.position:
 
-            # Not yet ... we MIGHT BUY if ...
+            # not postion then buy when condiction satisfied
             if self.datapredict[0] == 1:
-
-                # BUY, BUY, BUY!!! (with all possible default parameters)
                 # self.log('BUY CREATE, %.2f' % self.dataclose[0])
 
                 # Keep track of the created order to avoid a 2nd order
