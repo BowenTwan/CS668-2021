@@ -4,11 +4,11 @@ from joblib import dump, load
 from sklearn.utils import resample
 from talib import abstract
 
-import datetime  # 用于datetime对象操作
-import os # 用于管理路径
-import sys  # 用于在argvTo[0]中找到脚本名称
-import backtrader as bt # 引入backtrader框架
-from backtrader.feeds import GenericCSVData # 用于扩展DataFeed
+import datetime  #
+import os 
+import sys  
+import backtrader as bt 
+from backtrader.feeds import GenericCSVData
 import pandas as pd
 
 # better plotting and results analys
