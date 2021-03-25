@@ -14,7 +14,7 @@ from backtrader_plotting import Bokeh
 class GenericCSVDataEx(GenericCSVData):
 
     lines = (('predict'),)
-    params = (('predict', 71),)
+    params = (('predict', 72),)
     
 # creating strategy
 maximum_holding = 5
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     #* Getting stock list 
     # getting currecnt working dirctory
     cwd = os.getcwd()
-    path = cwd + '/TPData'
+    path = cwd + '/TPData1'
 
     stocklist = []
     for filename in os.listdir(path):
@@ -113,7 +113,7 @@ if __name__ == '__main__':
                 close = 4,
                 volume = 5,
                 openinterest = -1,
-                predict = 71,
+                predict = 72,
                 ma5 = 6
                 )
         
@@ -129,7 +129,9 @@ if __name__ == '__main__':
     cerebro.run()
 
     # plot
-    cerebro.plot()
+    # cerebro.plot()
+    # b = Bokeh(style='bar')
+    # cerebro.plot(b)
     
     # print out final capital 
     print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
