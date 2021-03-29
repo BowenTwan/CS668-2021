@@ -1,3 +1,8 @@
+'''
+
+'''
+
+
 from __future__ import (absolute_import, division, print_function,unicode_literals)
 
 import datetime  
@@ -8,6 +13,8 @@ import argparse
 
 # better plotting and results analys
 from backtrader_plotting import Bokeh
+import pandas as pd
+from joblib import dump, load
 
 
 
@@ -15,7 +22,7 @@ from backtrader_plotting import Bokeh
 class GenericCSVDataEx(GenericCSVData):
 
     lines = (('predict'),)
-    params = (('predict', 72),)
+    params = (('predict', 71),)
     
 # creating strategy
 maximum_holding = 5
@@ -23,14 +30,18 @@ class DPStrategy(bt.Strategy):
     params = (
         ('trailpercent', 0.05),
     )
-    def log(self, txt, dt=None):
-        ''' loggibf function'''
-        dt = dt or self.datas[0].datetime.date(0)
-        print('%s, %s' % (dt.isoformat(), txt))
+
     def __init__(self):
         # create list to store position
         self.hold_stocks = []
+        self.log_data = []
         self.orders = {}
+        
+    def log(self, txt, dt=None):
+        ''' logging function'''
+        dt = dt or self.datas[0].datetime.date(0)
+        print('%s, %s' % (dt.isoformat(), txt))
+        self.log_data.append(f'{dt.isoformat()} {txt}')
         
     def notify_order(self, order):
         if order.status in [bt.Order.Completed]:
@@ -59,7 +70,7 @@ class DPStrategy(bt.Strategy):
     def next(self):
         # print current postion situation
         print(self.hold_stocks)
-        
+        self.log(f'{self.datetime.date()}')
         # check if stock has been in selling order   
         for stk in self.hold_stocks:
     
@@ -83,9 +94,10 @@ class DPStrategy(bt.Strategy):
                 self.buy(data = d[0], size = stake)
                 if len(self.hold_stocks) >= maximum_holding:
                     break
+                
     def stop(self):
-        with open('resluts_log.csv', 'w') as e:
-            for line in self.log_file:
+        with open('resluts_log.txt', 'w') as e:
+            for line in self.log_data:
                 e.write(line + '\n')
 
 def parse_args():
@@ -142,20 +154,39 @@ if __name__ == '__main__':
     #* Getting stock list 
     # getting currecnt working dirctory
     cwd = os.getcwd()
-    path = cwd + '/TPData1'
+    path = cwd + '/BTData'
 
     stocklist = []
     for filename in os.listdir(path):
         if filename.endswith('.csv'):
             stocklist.append(filename[3:-4])
     print(f'There are {len(stocklist)} stocks in S&P500 \n')
+    
+    # predition on new data and assign position singal
+    # paper trading period: 20200208 ~ 20210208
+    #* Load Data
+    for filename in stocklist:
+        filepath = f'{cwd}/LIData/li_{filename}.csv'
+        df = pd.read_csv(f'{filepath}',index_col='Date')
+        # df.set_index(['Date'])
+        print(f'{filename} stock training data loaded. \n')
+        print(f'{filename}Starting Prediction on backtesting date \n')
+        df_trade = df[df.index > '2020-02-08'].drop('sgn', axis=1)
+
+        #* load model
+        model_name = os.path.join(f'{cwd}/Model1/',f'md_{filename}.joblib')
+        model = load(model_name)
+        df_trade['predict'] = model.predict(df_trade)
+        # save prediction file 
+        df_trade.to_csv(f'{cwd}/BTData/bt_{filename}.csv')
+    
 
     cerebro = bt.Cerebro(stdstats=False)
     # adding strategy
     cerebro.addstrategy(DPStrategy)
     
     for stock in stocklist:
-        datapath = path + f'/tp_{stock}' +'.csv'
+        datapath = path + f'/bt_{stock}' +'.csv'
         # adding stock price data into backtesting system
         data = GenericCSVDataEx(
                 dataname = datapath,
@@ -171,7 +202,7 @@ if __name__ == '__main__':
                 close = 4,
                 volume = 5,
                 openinterest = -1,
-                predict = 72,
+                predict = 71,
                 ma5 = 6
                 )
         
@@ -186,7 +217,7 @@ if __name__ == '__main__':
     cerebro.addanalyzer(bt.analyzers.DrawDown, _name='DW')
     
     # add writor: 
-    cerebro.addwriter(bt.WriterFile,round = 2)
+    cerebro.addwriter(bt.WriterFile)
     # print out starting capital 
     print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
     # start backtesting 
@@ -199,8 +230,8 @@ if __name__ == '__main__':
 
     # plot
     # cerebro.plot()
-    b = Bokeh(style='bar')
-    cerebro.plot(b)
+    #b = Bokeh(style='bar')
+    #cerebro.plot(b)
     
     # print out final capital 
     print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
