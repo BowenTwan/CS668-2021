@@ -4,6 +4,7 @@ import datetime
 import os 
 import backtrader as bt 
 from backtrader.feeds import GenericCSVData 
+import argparse
 
 # better plotting and results analys
 from backtrader_plotting import Bokeh
@@ -38,18 +39,22 @@ class DPStrategy(bt.Strategy):
             else:  # Sell
                 self.orders.pop(order.data._name)
                 self.hold_stocks.remove(order.data._name)
-                print('{}: SELL {} EXECUTED, Price: {:.2f}'.format(
-                    self.datetime.date(), order.data._name, order.executed.price))
+                self.log('{}: SELL {} EXECUTED, Price: {:.2f}'.format(self.datetime.date(), order.data._name, order.executed.price))
+                # print('{}: SELL {} EXECUTED, Price: {:.2f}'.format(
+                    # self.datetime.date(), order.data._name, order.executed.price))
         elif order.status in [bt.Order.Rejected, bt.Order.Margin, bt.Order.Cancelled, bt.Order.Expired]:
             if order.data._name in self.hold_stocks:
                 self.hold_stocks.remove(order.data._name)
-            print('{}: order {} failed!'.format(self.datetime.date(), order.data._name))
+            self.log('{}: order {} failed!'.format(self.datetime.date(), order.data._name))
+            # print('{}: order {} failed!'.format(self.datetime.date(), order.data._name))
 
     def notify_trade(self, trade):
         if not trade.isclosed:
             return
-        print('{}: TRADING {} OPERATION PROFIT, GROSS {:.2f}, NET {:.2f}'.format(
+        self.log('{}: TRADING {} OPERATION PROFIT, GROSS {:.2f}, NET {:.2f}'.format(
             self.datetime.date(), trade.data._name, trade.pnl, trade.pnlcomm))
+        #print('{}: TRADING {} OPERATION PROFIT, GROSS {:.2f}, NET {:.2f}'.format(
+            #self.datetime.date(), trade.data._name, trade.pnl, trade.pnlcomm))
         
     def next(self):
         # print current postion situation
@@ -78,7 +83,60 @@ class DPStrategy(bt.Strategy):
                 self.buy(data = d[0], size = stake)
                 if len(self.hold_stocks) >= maximum_holding:
                     break
+    def stop(self):
+        with open('resluts_log.csv', 'w') as e:
+            for line in self.log_file:
+                e.write(line + '\n')
 
+def parse_args():
+    parser = argparse.ArgumentParser(description='MultiData Strategy')
+
+    parser.add_argument('--data', '-d',
+                        default='../../datas/2006-day-001.txt',
+                        help='data to add to the system')
+
+    parser.add_argument('--fromdate', '-f',
+                        default='2006-01-01',
+                        help='Starting date in YYYY-MM-DD format')
+
+    parser.add_argument('--todate', '-t',
+                        default='2006-12-31',
+                        help='Starting date in YYYY-MM-DD format')
+
+    parser.add_argument('--period', default=15, type=int,
+                        help='Period to apply to the Simple Moving Average')
+
+    parser.add_argument('--onlylong', '-ol', action='store_true',
+                        help='Do only long operations')
+
+    parser.add_argument('--writercsv', '-wcsv', action='store_true',
+                        help='Tell the writer to produce a csv stream')
+
+    parser.add_argument('--csvcross', action='store_true',
+                        help='Output the CrossOver signals to CSV')
+
+    parser.add_argument('--cash', default=100000, type=int,
+                        help='Starting Cash')
+
+    parser.add_argument('--comm', default=2, type=float,
+                        help='Commission for operation')
+
+    parser.add_argument('--mult', default=10, type=int,
+                        help='Multiplier for futures')
+
+    parser.add_argument('--margin', default=2000.0, type=float,
+                        help='Margin for each future')
+
+    parser.add_argument('--stake', default=1, type=int,
+                        help='Stake to apply in each operation')
+
+    parser.add_argument('--plot', '-p', action='store_true',
+                        help='Plot the read data')
+
+    parser.add_argument('--numfigs', '-n', default=1,
+                        help='Plot using numfigs figures')
+
+    return parser.parse_args()
 
 if __name__ == '__main__':
     #* Getting stock list 
@@ -91,8 +149,8 @@ if __name__ == '__main__':
         if filename.endswith('.csv'):
             stocklist.append(filename[3:-4])
     print(f'There are {len(stocklist)} stocks in S&P500 \n')
-    
-    cerebro = bt.Cerebro()
+
+    cerebro = bt.Cerebro(stdstats=False)
     # adding strategy
     cerebro.addstrategy(DPStrategy)
     
@@ -123,15 +181,26 @@ if __name__ == '__main__':
     cerebro.broker.setcash(100000.0)
     # set commission 
     cerebro.broker.setcommission(commission=0.00025)
+    # Add analyzer
+    cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name = 'SharpeRatio')
+    cerebro.addanalyzer(bt.analyzers.DrawDown, _name='DW')
+    
+    # add writor: 
+    cerebro.addwriter(bt.WriterFile,round = 2)
     # print out starting capital 
     print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
     # start backtesting 
-    cerebro.run()
+    results = cerebro.run()
+    
+    strat = results[0]
+    print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
+    print('SR:', strat.analyzers.SharpeRatio.get_analysis())
+    print('DW:', strat.analyzers.DW.get_analysis())
 
     # plot
     # cerebro.plot()
-    # b = Bokeh(style='bar')
-    # cerebro.plot(b)
+    b = Bokeh(style='bar')
+    cerebro.plot(b)
     
     # print out final capital 
     print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
