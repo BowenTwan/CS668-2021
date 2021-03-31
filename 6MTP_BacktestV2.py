@@ -89,9 +89,11 @@ class DPStrategy(bt.Strategy):
             for d in buy_dict:
                 if (d[0]._name in self.hold_stocks) & (d[0].predict == 1):
                     continue
-                stake = int(self.broker.cash / (maximum_holding - len(self.hold_stocks)) // (d[0].close[0] * 100)) * 100
+                
+                # Set the buying share for each order
+                stake = int(self.broker.cash / (maximum_holding - len(self.hold_stocks)) // (d[0].close[0])) 
                 self.hold_stocks.append(d[0]._name)
-                self.buy(data = d[0], size = stake)
+                self.buy(price = d[0].close[0], size = stake)
                 if len(self.hold_stocks) >= maximum_holding:
                     break
                 
@@ -100,55 +102,6 @@ class DPStrategy(bt.Strategy):
             for line in self.log_data:
                 e.write(line + '\n')
 
-def parse_args():
-    parser = argparse.ArgumentParser(description='MultiData Strategy')
-
-    parser.add_argument('--data', '-d',
-                        default='../../datas/2006-day-001.txt',
-                        help='data to add to the system')
-
-    parser.add_argument('--fromdate', '-f',
-                        default='2006-01-01',
-                        help='Starting date in YYYY-MM-DD format')
-
-    parser.add_argument('--todate', '-t',
-                        default='2006-12-31',
-                        help='Starting date in YYYY-MM-DD format')
-
-    parser.add_argument('--period', default=15, type=int,
-                        help='Period to apply to the Simple Moving Average')
-
-    parser.add_argument('--onlylong', '-ol', action='store_true',
-                        help='Do only long operations')
-
-    parser.add_argument('--writercsv', '-wcsv', action='store_true',
-                        help='Tell the writer to produce a csv stream')
-
-    parser.add_argument('--csvcross', action='store_true',
-                        help='Output the CrossOver signals to CSV')
-
-    parser.add_argument('--cash', default=100000, type=int,
-                        help='Starting Cash')
-
-    parser.add_argument('--comm', default=2, type=float,
-                        help='Commission for operation')
-
-    parser.add_argument('--mult', default=10, type=int,
-                        help='Multiplier for futures')
-
-    parser.add_argument('--margin', default=2000.0, type=float,
-                        help='Margin for each future')
-
-    parser.add_argument('--stake', default=1, type=int,
-                        help='Stake to apply in each operation')
-
-    parser.add_argument('--plot', '-p', action='store_true',
-                        help='Plot the read data')
-
-    parser.add_argument('--numfigs', '-n', default=1,
-                        help='Plot using numfigs figures')
-
-    return parser.parse_args()
 
 if __name__ == '__main__':
     #* Getting stock list 
@@ -216,8 +169,7 @@ if __name__ == '__main__':
     cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name = 'SharpeRatio')
     cerebro.addanalyzer(bt.analyzers.DrawDown, _name='DW')
     
-    # add writor: 
-    cerebro.addwriter(bt.WriterFile)
+ 
     # print out starting capital 
     print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
     # start backtesting 
