@@ -46,38 +46,37 @@ class DPStrategy(bt.Strategy):
     def notify_order(self, order):
         if order.status in [bt.Order.Completed]:
             if order.isbuy():
-                print('{}: BUY {} EXECUTED, Price: {:.2f}'.format(self.datetime.date(), order.data._name, order.executed.price))
+                print(': BUY {} EXECUTED, Price: {:.2f}'.format( order.data._name, order.executed.price))
             else:  # Sell
                 self.orders.pop(order.data._name)
                 self.hold_stocks.remove(order.data._name)
-                self.log('{}: SELL {} EXECUTED, Price: {:.2f}'.format(self.datetime.date(), order.data._name, order.executed.price))
+                self.log(': SELL {} EXECUTED, Price: {:.2f}'.format( order.data._name, order.executed.price))
                 # print('{}: SELL {} EXECUTED, Price: {:.2f}'.format(
                     # self.datetime.date(), order.data._name, order.executed.price))
         elif order.status in [bt.Order.Rejected, bt.Order.Margin, bt.Order.Cancelled, bt.Order.Expired]:
             if order.data._name in self.hold_stocks:
                 self.hold_stocks.remove(order.data._name)
-            self.log('{}: order {} failed!'.format(self.datetime.date(), order.data._name))
+            self.log(': order {} Failed!'.format(order.data._name))
             # print('{}: order {} failed!'.format(self.datetime.date(), order.data._name))
 
     def notify_trade(self, trade):
         if not trade.isclosed:
             return
-        self.log('{}: TRADING {} OPERATION PROFIT, GROSS {:.2f}, NET {:.2f}'.format(
-            self.datetime.date(), trade.data._name, trade.pnl, trade.pnlcomm))
+        self.log(': TRADING {} OPERATION PROFIT, GROSS {:.2f}, NET {:.2f}'.format(
+            trade.data._name, trade.pnl, trade.pnlcomm))
         #print('{}: TRADING {} OPERATION PROFIT, GROSS {:.2f}, NET {:.2f}'.format(
             #self.datetime.date(), trade.data._name, trade.pnl, trade.pnlcomm))
         
     def next(self):
         # print current postion situation
-        print(self.hold_stocks)
-        self.log(f'{self.datetime.date()}')
+        self.log(f': Position: {self.hold_stocks}')
         # check if stock has been in selling order   
         for stk in self.hold_stocks:
     
             if stk not in self.orders:
                 print(self.getdatabyname(stk)._name)
                 self.orders[stk] = self.close(data = self.getdatabyname(stk),
-                    exectype = bt.Order.StopTrail, trailamount = 0, trailpercent = self.p.trailpercent)
+                    exectype = bt.Order.StopTrail, trailpercent = self.p.trailpercent)
 
         if len(self.hold_stocks) < maximum_holding:
             buy_dict = {}
@@ -92,8 +91,9 @@ class DPStrategy(bt.Strategy):
                 
                 # Set the buying share for each order
                 stake = int(self.broker.cash / (maximum_holding - len(self.hold_stocks)) // (d[0].close[0])) 
+                # stake = 100
+                self.buy(data = d[0], size = stake)
                 self.hold_stocks.append(d[0]._name)
-                self.buy(price = d[0].close[0], size = stake)
                 if len(self.hold_stocks) >= maximum_holding:
                     break
                 
@@ -114,25 +114,6 @@ if __name__ == '__main__':
         if filename.endswith('.csv'):
             stocklist.append(filename[3:-4])
     print(f'There are {len(stocklist)} stocks in S&P500 \n')
-    
-    # predition on new data and assign position singal
-    # paper trading period: 20200208 ~ 20210208
-    #* Load Data
-    for filename in stocklist:
-        filepath = f'{cwd}/LIData/li_{filename}.csv'
-        df = pd.read_csv(f'{filepath}',index_col='Date')
-        # df.set_index(['Date'])
-        print(f'{filename} stock training data loaded. \n')
-        print(f'{filename}Starting Prediction on backtesting date \n')
-        df_trade = df[df.index > '2020-02-08'].drop('sgn', axis=1)
-
-        #* load model
-        model_name = os.path.join(f'{cwd}/Model1/',f'md_{filename}.joblib')
-        model = load(model_name)
-        df_trade['predict'] = model.predict(df_trade)
-        # save prediction file 
-        df_trade.to_csv(f'{cwd}/BTData/bt_{filename}.csv')
-    
 
     cerebro = bt.Cerebro(stdstats=False)
     # adding strategy
@@ -188,4 +169,5 @@ if __name__ == '__main__':
     # print out final capital 
     print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
     print(f'return_rate: {round(cerebro.broker.getvalue()/100000 -1,4)*100}%')
+    
 
