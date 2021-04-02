@@ -120,7 +120,7 @@ if __name__ == '__main__':
     cerebro.addstrategy(DPStrategy)
     
     for stock in stocklist:
-        datapath = cwd + f'/BTData/bt_{stock}' +'.csv'
+        datapath = cwd + f'/BTData1/bt_{stock}' +'.csv'
         # adding stock price data into backtesting system
         data = GenericCSVDataEx(
                 dataname = datapath,
