@@ -1,5 +1,5 @@
 '''
-
+Apply the predition model trained to predict the price move direction for every company for every trading day in 2021
 '''
 
 
