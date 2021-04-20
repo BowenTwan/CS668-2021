@@ -5,11 +5,11 @@ from joblib import dump, load
 from sklearn.utils import resample
 from talib import abstract
 
-import datetime  # 用于datetime对象操作
-import os.path  # 用于管理路径
-import sys  # 用于在argvTo[0]中找到脚本名称
-import backtrader as bt # 引入backtrader框架
-from backtrader.feeds import GenericCSVData # 用于扩展DataFeed
+import datetime 
+import os.path  
+import sys  
+import backtrader as bt 
+from backtrader.feeds import GenericCSVData 
 import pandas as pd
 
 # better plotting and results analys
@@ -97,7 +97,6 @@ class DPStrategy(bt.Strategy):
             # Not yet ... we MIGHT BUY if ...
             if self.datapredict[0] == 1:
 
-                # BUY, BUY, BUY!!! (with all possible default parameters)
                 # self.log('BUY CREATE, %.2f' % self.dataclose[0])
 
                 # Keep track of the created order to avoid a 2nd order
@@ -108,7 +107,6 @@ class DPStrategy(bt.Strategy):
             Condition2 = self.datavol5[0] > self.datavol30[0]
 
             if Condition1 & Condition2:
-                # SELL, SELL, SELL!!! (with all possible default parameters)
                 # self.log('SELL CREATE, %.2f' % self.dataclose[0])
 
                 # Keep track of the created order to avoid a 2nd order

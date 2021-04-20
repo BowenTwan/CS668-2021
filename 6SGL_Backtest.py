@@ -138,12 +138,12 @@ class DPStrategy(bt.Strategy):
             Condition2 = self.datavol5[0] > self.datavol30[0]
 
             if Condition1 & Condition2:
-                # SELL, SELL, SELL!!! (with all possible default parameters)
                 # self.log('SELL CREATE, %.2f' % self.dataclose[0])
 
                 # Keep track of the created order to avoid a 2nd order
                 self.order = self.sell()
 
+# backtesting
 if __name__ == '__main__':
 
     modpath = os.getcwd()

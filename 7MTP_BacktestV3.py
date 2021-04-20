@@ -1,5 +1,5 @@
 '''
-
+Final version to backtesting 494 stocks with our strategy 
 '''
 
 
@@ -103,6 +103,7 @@ class DPStrategy(bt.Strategy):
                 e.write(line + '\n')
 
 
+#backtesting
 if __name__ == '__main__':
     #* Getting stock list 
     # getting currecnt working dirctory
