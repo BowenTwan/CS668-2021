@@ -73,7 +73,7 @@ for filename in stocklist:
         #* Train Model
         #? runing mutiple algorithm/paramter here, save the model with highest accuracy 
         model_name = os.path.join(f'{cwd}/Model/',f'md_{filename}.joblib')
-        clf = RandomForestClassifier(max_depth=2, random_state=42)
+        clf = RandomForestClassifier(max_depth=2, random_state=6)
         clf_model = clf.fit(df_train_x,df_train_y)
         dump(clf_model, model_name)
         df_test_predict =  clf_model.predict(df_test_x)
